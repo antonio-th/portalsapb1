@@ -1,0 +1,88 @@
+<template>
+  <div>
+    <el-row type="flex" justify="center" id="login">
+      <el-col :span="12">
+
+        <el-card id="login-card">
+          <div slot="header">
+            <h3>Inicio de Sesion</h3>
+          </div>
+
+          <form @keyup.enter="login">
+          <el-row>
+            <el-col :span="8" :offset="2">Usuario</el-col>
+            <el-col :span="12">
+              <el-input auto-complete="false" v-model="username">
+              </el-input>
+            </el-col>
+          </el-row>
+          <el-row style="margin-top: 15px;">
+            <el-col :span="8" :offset="2">Password</el-col>
+            <el-col :span="12">
+              <el-input type="password" v-model="password" />
+            </el-col>
+          </el-row>
+          <el-row id="toolbar" type="flex" justify="center">
+            <el-col :span="4">
+              <el-button type="primary" @click="login">
+                Ingresar</el-button>
+            </el-col>
+          </el-row>
+          </form>
+
+        </el-card>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import $ from 'jquery'
+
+const metodos = {
+  async login () {
+    try {
+      const params = {
+        j_username: this.$data.username,
+        j_password: this.$data.password
+      }
+      const url = '/GAPA/j_spring_security_check'
+      const respuesta = await $.post(url, params)
+
+      if (respuesta.success) {
+        this.$router.push('/')
+        return
+      }
+
+      if (respuesta.error) {
+        this.$message.error('Usuario o password Incorrectos')
+      } else {
+        this.$message.error('Ocurrio un error desconocido')
+        console.log(respuesta)
+      }
+    } catch (e) {
+      this.$message.error('Ocurrio un error de red')
+    }
+  } // login
+}
+
+export default {
+  name: 'Login',
+  data: () => {
+    return {
+      username: '',
+      password: ''
+    }
+  },
+  methods: metodos
+}
+</script>
+
+<style>
+  #toolbar {
+    margin: 30px 0 0 0;
+  }
+  #login-card {
+    max-width: 450px;
+  }
+</style>
