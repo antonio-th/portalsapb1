@@ -17,7 +17,7 @@
           <el-table-column prop="username" label="Usuario"
               header-align="center" />
           <el-table-column prop="nombres" label="Nombre"
-                           header-align="center" width="200px" />
+                           header-align="center" />
           <el-table-column prop="role" label="Perfil" :fit="true"
                            header-align="center" />
           <el-table-column prop="dateCreated" label="Alta"
@@ -34,15 +34,71 @@
             </template>
           </el-table-column>
         </el-table>
-        <el-pagination :total="totalUsuarios" :page-size="20" layout="total, prev, pager, next">
-        </el-pagination>
+        <el-pagination :total="totalUsuarios" :page-size="pageSize"
+                       @current-change="pageChanged"
+                       layout="total, prev, pager, next" />
       </div>
     </div>
 
   </div>
 </template>
 
-<script src="./UsuariosList.js"></script>
+<script>
+import $ from 'jquery'
+import moment from 'moment'
+
+const metodos = {
+  login () {
+    $.post('/GAPA/j_spring_security_check', {j_username: 'admin', j_password: 'qazpoi99'})
+  },
+  async consultar () {
+    try {
+      const offset = (this.$data.currentPage - 1) * this.$data.pageSize
+      const params = {max: this.$data.pageSize, offset: offset}
+      const respuesta = await $.get('/GAPA/vue/usuario', params)
+      this.$data.usuarios = respuesta.listado
+      this.$data.totalUsuarios = respuesta.total
+    } catch (e) {
+      if (e.status === 401) {
+        this.$message.error('Expiro la sesion')
+        this.$router.push('/login')
+      }
+    }
+  },
+  ffecha (row, column, cellValue) {
+    return moment(cellValue).format('DD-MM-YYYY')
+  },
+  prueba () {
+    var config = {
+      type: 'DELETE'
+    }
+    $.ajax('/GAPA/vue/prueba', config)
+  },
+  editar (index, row) {
+    this.$router.push({ name: 'Usuario', params: { id: row.id } })
+  },
+  pageChanged (currentPage) {
+    this.$data.currentPage = currentPage
+    this.consultar()
+  }
+}
+
+export default {
+  name: 'UsuariosList',
+  data () {
+    return {
+      usuarios: [],
+      pageSize: 10,
+      currentPage: 1,
+      totalUsuarios: 0
+    }
+  },
+  methods: metodos,
+  created () {
+    this.consultar()
+  }
+} // component
+</script>
 <style>
   #tabla {
     /* margin: 0 20px 0 20px; */

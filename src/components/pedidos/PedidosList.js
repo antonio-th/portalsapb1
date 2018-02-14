@@ -6,7 +6,6 @@ const data = () => {
       estatus: ''
     },
     pedidos: [],
-    totalPedidos: 150,
     offset: 0
   }
 }
@@ -17,8 +16,15 @@ const methods = {
   }
 }
 
+const computed = {
+  totalPedidos () {
+    return this.pedidos.length
+  }
+}
+
 export default {
   name: 'PedidosList',
   data: data,
-  methods: methods
+  methods: methods,
+  computed: computed
 }
