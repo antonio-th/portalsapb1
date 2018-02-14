@@ -3,7 +3,9 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
+import store from './store'
 import 'element-ui/lib/theme-chalk/index.css'
+import '@/assets/css/main.css'
 import {Button, Container, Header, Main, Aside, Footer,
   Message, Alert, Loading, MessageBox, Confirm, Notification,
   Row, Col, Input, Select, DatePicker, Table, TableColumn, Pagination,
@@ -39,6 +41,7 @@ Vue.config.productionTip = false
 new Vue({
   el: '#app',
   router,
+  store,
   components: { App },
   template: '<App/>'
 })

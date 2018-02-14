@@ -1,15 +1,28 @@
 <template>
   <div>
-    <h4>Menu</h4>
-
-    <ul>
-      <li>
-        <router-link to="/pedidos-list">Pedidos</router-link>
-      </li>
-      <li>
-        <router-link to="/usuarios-list">Usuarios</router-link>
-      </li>
-    </ul>
+    <div class="nav">
+      <span class="menuButton"></span>
+    </div>
+    <div class="body">
+      <h1>GAPA</h1>
+      <br />
+      <h3>Bienvenido al Portal de Pedidos</h3>
+      <br />
+      <div id="menu" style="margin-left: 200px; width: 550px;">
+        <div class="opcion">
+          <router-link to="/pedidos-list">
+            <img src="../assets/img/pedidos.png">
+            <div class="texto-opcion">Pedidos</div>
+          </router-link>
+        </div>
+        <div class="opcion">
+          <router-link to="/usuarios-list">
+            <img src="../assets/img/usuarios.png" />
+            <div class="texto-opcion">Usuarios</div>
+          </router-link>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -18,3 +31,29 @@ export default {
   name: 'Default'
 }
 </script>
+<style>
+  .opcion {
+    display: inline-block;
+    border: solid #909090 2px;;
+    box-shadow: 3px 3px;
+    border-radius: 25px;
+    width: 130px;
+    text-align: center;
+    vertical-align: middle;
+    margin-left: 15px;
+    margin-top: 15px;
+    padding: 10px;
+  }
+
+  .opcion :hover {
+    color: green;
+  }
+
+  .texto-opcion {
+    font-family: Verdana;
+    font-size: 18px;
+  }
+  h3 {
+    font-weight: 400;
+  }
+</style>

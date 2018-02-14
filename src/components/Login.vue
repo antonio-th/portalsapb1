@@ -22,7 +22,7 @@
               <el-input type="password" v-model="password" />
             </el-col>
           </el-row>
-          <el-row id="toolbar" type="flex" justify="center">
+          <el-row id="barra" type="flex" justify="center">
             <el-col :span="4">
               <el-button type="primary" @click="login">
                 Ingresar</el-button>
@@ -49,11 +49,15 @@ const metodos = {
       const url = '/GAPA/j_spring_security_check'
       const respuesta = await $.post(url, params)
 
+      /*   LOGIN EXITOSO  */
       if (respuesta.success) {
+        const queryPrincipal = await $.get('/GAPA/vue/principal')
+        this.$store.commit('login', queryPrincipal)
         this.$router.push('/')
         return
       }
 
+      /*  OCURRIO UN ERROR  */
       if (respuesta.error) {
         this.$message.error('Usuario o password Incorrectos')
       } else {
@@ -79,10 +83,15 @@ export default {
 </script>
 
 <style>
-  #toolbar {
+  html, body {
+    height: 100%;
+  }
+
+  #barra {
     margin: 30px 0 0 0;
   }
   #login-card {
     max-width: 450px;
+    margin-top: 50px;
   }
 </style>
