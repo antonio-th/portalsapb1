@@ -26,35 +26,154 @@
               <el-option value="Capturando">Capturando</el-option>
               <el-option value="Enviado">Enviado</el-option>
             </el-select>
-            <el-button type="primary" class="spacer">Buscar</el-button>
+            <el-button type="primary"
+                       @click="buscar"
+                       class="spacer">Buscar</el-button>
             <el-button @click="limpiar">Limpiar</el-button>
           </el-col>
         </el-row>
       </div>
 
       <div id="listado">
-        <el-table :data="pedidos">
-          <el-table-column prop="docNum" label="DocNum"></el-table-column>
-          <el-table-column prop="razonSocial" label="Razon Social"></el-table-column>
-          <el-table-column prop="alias" label="Nombre Comercial" width="130">
+        <el-table :data="pedidos" size="mini" :stripe="true" :border="true">
+          <el-table-column prop="docNum" align="center"
+                           label="DocNum" width="75px" />
+          <el-table-column prop="razonSocial" header-align="center"
+                           label="Razon Social" />
+          <el-table-column prop="alias" header-align="center"
+                           label="Nombre Comercial" />
+          <el-table-column prop="total" header-align="center"
+                           :formatter="fmonto" width="125px"
+                           align="right" label="Monto" />
+          <el-table-column prop="fechaPedido" :formatter="ffecha"
+                           width="95px"
+                           align="center" :fit="true" label="Captura" />
+          <el-table-column prop="fechaEntrega" :formatter="ffecha"
+                           width="95px"
+                           align="center" :fit="true" label="Entrega" />
+          <el-table-column prop="referencia" header-align="center"
+                           :fit="true" label="Referencia" />
+          <el-table-column prop="estatus" align="center"
+                           width="65px" label="Estatus">
+            <template slot-scope="scope">
+              <i class="el-icon-edit"
+                 v-if="scope.row.estatus == 'Capturando'"></i>
+              <i class="el-icon-check"
+                 v-if="scope.row.estatus == 'Enviado'"></i>
+            </template>
           </el-table-column>
-          <el-table-column prop="monto" label="Monto"></el-table-column>
-          <el-table-column prop="fechaPedido" label="Fecha Pedido"></el-table-column>
-          <el-table-column prop="fechaEntrega" label="Fecha Entrega"></el-table-column>
-          <el-table-column prop="referencia" label="Referencia"></el-table-column>
-          <el-table-column prop="estatus" label="Estatus"></el-table-column>
+          <el-table-column v-bind:width="60">
+            <template slot-scope="scope">
+              <el-button @click="editar(scope.$index, scope.row)">
+                <i class="el-icon-view"></i>
+              </el-button>
+            </template>
+          </el-table-column>
         </el-table>
 
-        <el-pagination :total="totalPedidos" :page-size="15"
+        <el-pagination :total="totalRegistros" :page-size="pageSize" :current-page="currentPage"
+                       @current-change="pageChange"
                        layout="total, prev, pager, next">
         </el-pagination>
+      </div> <!-- listado -->
+
+      <div id="leyendas">
+        <i class="el-icon-edit"></i> - Capturando
+        <i class="el-icon-check"></i> - Enviado
       </div>
 
     </div> <!-- contenido -->
   </div>
 </template>
 
-<script src="./PedidosList.js" />
+<script>
+import $ from 'jquery'
+import moment from 'moment'
+import numeral from 'numeral'
+
+const data = () => {
+  return {
+    filtros: {
+      fecha1: null,
+      fecha2: null,
+      estatus: ''
+    },
+    pedidos: [],
+    pageSize: 10,
+    currentPage: 1,
+    totalRegistros: 0
+  }
+}
+
+const methods = {
+  buscar () {
+    this.$data.currentPage = 1
+    this.consultar()
+  },
+  async consultar () {
+    try {
+      const offset = (this.currentPage - 1) * this.pageSize
+      const where = JSON.stringify(this.$data.filtros)
+      const params = {max: this.$data.pageSize, offset: offset, filtros: where}
+      const response = await $.post('/GAPA/vue/pedido', params)
+      if (response.listado) {
+        this.$data.pedidos = response.listado
+        this.$data.totalRegistros = response.totalRegistros
+      }
+    } catch (e) {
+      if (e.status === 401) {
+        this.$message.error('Expiro la sesion')
+        this.$router.push('/login')
+        return
+      }
+
+      this.$notify({
+        title: 'Error de Conexion',
+        type: 'error',
+        message: e
+      })
+    }
+  },
+  limpiar () {
+    this.$data.filtros = {...data.filtros}
+    this.consultar()
+  },
+  pageChange (currentPage) {
+    this.$data.currentPage = currentPage
+    this.consultar()
+  },
+  ffecha (row, column, cellValue) {
+    let theValue = null
+    if (cellValue) theValue = moment(cellValue).format('DD-MM-YYYY')
+    return theValue
+  },
+  fmonto (row, column, cellValue) {
+    const monto = numeral(cellValue).format('0,0.00') + ' ' + row.moneda
+    return monto
+  },
+  editar (index, row) {
+    this.$router.push({ name: 'Pedido', params: { id: row.id } })
+  }
+}
+
+const computed = {
+  totalPedidos () {
+    return this.pedidos.length
+  }
+}
+
+const created = function () {
+  this.consultar()
+}
+
+export default {
+  name: 'PedidosList',
+  data: data,
+  methods: methods,
+  computed: computed,
+  created: created
+}
+</script>
 
 <style>
   .spacer {
@@ -81,5 +200,9 @@
 
   #span-al {
     margin: 0 8px 0 8px;
+  }
+
+  #leyendas {
+    margin: 10px 0 0 10px;
   }
 </style>

@@ -29,7 +29,7 @@
           <el-table-column v-bind:width="60">
             <template slot-scope="scope">
               <el-button @click="editar(scope.$index, scope.row)">
-                <i class="el-icon-edit"></i>
+                <i class="el-icon-view"></i>
               </el-button>
             </template>
           </el-table-column>
@@ -67,12 +67,6 @@ const metodos = {
   },
   ffecha (row, column, cellValue) {
     return moment(cellValue).format('DD-MM-YYYY')
-  },
-  prueba () {
-    var config = {
-      type: 'DELETE'
-    }
-    $.ajax('/GAPA/vue/prueba', config)
   },
   editar (index, row) {
     this.$router.push({ name: 'Usuario', params: { id: row.id } })

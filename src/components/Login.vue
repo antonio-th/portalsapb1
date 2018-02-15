@@ -47,6 +47,7 @@ const metodos = {
         j_password: this.$data.password
       }
       const url = '/GAPA/j_spring_security_check'
+      await $.post(url, params)
       const respuesta = await $.post(url, params)
 
       /*   LOGIN EXITOSO  */

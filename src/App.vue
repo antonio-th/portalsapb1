@@ -28,12 +28,13 @@
 </template>
 
 <script>
-// import $ from 'jquery'
+import $ from 'jquery'
 
 export default {
   name: 'App',
   methods: {
     logout () {
+      $.get('/GAPA/j_spring_security_logout')
       this.$store.commit('logout')
       this.$router.push('/login')
     }
