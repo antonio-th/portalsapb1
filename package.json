@@ -11,7 +11,9 @@
     "build": "node build/build.js"
   },
   "dependencies": {
+    "babel-polyfill": "^6.26.0",
     "element-ui": "^2.1.0",
+    "es6-promise": "^4.2.4",
     "jquery": "^3.3.1",
     "moment": "^2.20.1",
     "numeral": "^2.0.6",
