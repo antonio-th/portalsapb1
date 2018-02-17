@@ -3,7 +3,7 @@
     <!-- Toolbar -->
     <div class="nav">
       <span class="menuButton">
-        <router-link to="/" class="home">Inicio</router-link>
+        <router-link to="/menu" class="home">Inicio</router-link>
       </span>
       <span class="menuButton">
         <router-link to="/usuario" class="create">Nuevo Usuario</router-link>

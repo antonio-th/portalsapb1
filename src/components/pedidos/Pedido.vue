@@ -3,7 +3,7 @@
     <!-- Toolbar -->
     <div class="nav">
       <span class="menuButton">
-        <router-link to="/" class="home">Inicio</router-link>
+        <router-link to="/menu" class="home">Inicio</router-link>
       </span>
       <span class="menuButton">
         <router-link to="/pedidos-list" class="list">Listado</router-link>
@@ -15,50 +15,70 @@
 
       <!-- Encabezado -->
       <div id="encabezado">
-        <el-row>
+        <el-row class="iguala-alto">
           <el-col :span="3">Docnum</el-col>
-          <el-col :span="5">{{ pedido.docNum || '&nbsp;'}}&nbsp;</el-col>
+          <el-col :span="5">{{ pedido.docNum || '' }}&nbsp;&nbsp;</el-col>
           <el-col :span="4">Fecha Pedido</el-col>
-          <el-col :span="11">{{ pedido.fechaPedido }}&nbsp;</el-col>
+          <el-col :span="12">{{ ffecha(pedido.fechaPedido) }}&nbsp;&nbsp;</el-col>
         </el-row>
 
         <el-row>
           <el-col :span="3">Estatus</el-col>
           <el-col :span="5">{{ pedido.estatus || '&nbsp;' }}&nbsp;</el-col>
           <el-col :span="4">Fecha Entrega</el-col>
-          <el-col :span="11">
-            <el-date-picker v-model="pedido.fechaEntrega"></el-date-picker>
+          <el-col :span="12">
+            <el-date-picker v-model="pedido.fechaEntrega"
+                            format="dd-MM-yyyy" size="mini" />
           </el-col>
         </el-row>
 
         <el-row>
           <el-col :span="3">Referencia</el-col>
-          <el-col :span="5">
-            <el-input v-model="pedido.referencia"></el-input>
+          <el-col :span="5" class="input-referencia">
+            <el-input v-model="pedido.referencia" size="mini" />
           </el-col>
-          <el-col :span="4">Direccion Entrega</el-col>
-          <el-col :span="11">
-            <el-select v-model="pedido.direccionEntrega.shipToCode"></el-select>
+          <el-col :span="4">Cliente</el-col>
+          <el-col :span="12">
+            <el-autocomplete style="width: 450px;" v-model="textoCliente"
+                             @blur="validaCliente" :trigger-on-focus="false"
+                             size="mini" :debounce="500" @select="selectCliente"
+                             :fetch-suggestions="querySearch">
+              <template slot-scope="props">
+                <div class="opcion-cliente">
+                  <div><strong>{{ props.item.cardCode }} {{ props.item.cardFName }}</strong></div>
+                  <div class="op-alias">{{ props.item.cardName }}</div>
+                </div>
+              </template>
+            </el-autocomplete>
           </el-col>
         </el-row>
 
-        <el-row>
+        <el-row class="iguala-alto">
           <el-col :span="3">Moneda</el-col>
           <el-col :span="5">{{ pedido.moneda }}&nbsp;</el-col>
-          <el-col :span="4">Cliente</el-col>
-          <el-col :span="11">
-            <el-input v-model="pedido.cliente.cardCode"></el-input>
-          </el-col>
+
+          <el-col :span="4">Nombre Comercial</el-col>
+          <el-col :span="12">{{ pedido.cliente.cardCode }} {{ pedido.cliente.cardFName }}&nbsp;</el-col>
         </el-row>
 
         <el-row>
-          <el-col :span="5" :offset="8">Nombre Comercial</el-col>
-          <el-col :span="8">{{ pedido.cliente.cardFName }}</el-col>
+          <el-col :span="3">Direccion Entrega</el-col>
+          <el-col :span="5">
+            <el-select v-model="pedido.direccionEntrega" size="mini">
+              <el-option v-for="direccion in direcciones"
+                         :key="direccion.address" :value="direccion.address"
+                         :label="direccion.direccion" />
+            </el-select>
+          </el-col>
         </el-row>
       </div> <!-- encabezado -->
 
+      <div id="sin-cliente" v-if="!pedido.cliente.cardCode">
+        Para agregar productos seleccione el cliente
+      </div>
+
       <!-- Partidas -->
-      <div id="partidas">
+      <div id="partidas" v-if="pedido.cliente.cardCode">
         <el-row id="th-partida">
           <el-col :span="4">Codigo</el-col>
           <el-col :span="6">Descripcion</el-col>
@@ -70,39 +90,72 @@
           <el-col :span="2">Existencia</el-col>
           <el-col :span="2">&nbsp;</el-col>
         </el-row>
-        <el-row v-for="(partida, index) in pedido.partidas" :key="partida.id">
-          <el-col :span="4">{{ partida.itemCode}}</el-col>
-          <el-col :span="6">{{ partida.itemName}}</el-col>
+        <el-row v-for="(partida, index) in pedido.partidas" :key="index">
+          <el-col :span="4">{{ partida.itemCode}}&nbsp;</el-col>
+          <el-col :span="6">
+            <el-autocomplete :fetch-suggestions="autocompleteProducto"
+                 :trigger-on-focus="false" @select="selectProducto"
+                :data-index="index" @focus="producto_onfocus(index)"
+                 @blur="producto_onblur(index)"
+                size="mini" v-model="partida.texto">
+            </el-autocomplete>
+          </el-col>
           <el-col :span="2">
             <el-input v-model="partida.cantidad" size="mini"
-                      @input="recalcular(index)" />
+                      class="input-cantidad" @blur="validaCantidad(index)"
+                      @input="calcularPartida(index)" />
           </el-col>
-          <el-col :span="2">{{ partida.precio }}</el-col>
-          <el-col :span="2">{{ partida.impuestos }}</el-col>
-          <el-col :span="2">{{ partida.total }}</el-col>
-          <el-col :span="2">{{ partida.unidadMedida }}</el-col>
-          <el-col :span="2">{{ partida.existencia }}</el-col>
+          <el-col :span="2">{{ partida.precio }} {{ partida.moneda }}&nbsp;</el-col>
+          <el-col :span="2" v-if="pedido.moneda == pedido.codigoMXN">
+            {{ fmonto(partida.impuestos) }} {{codigoMXN}}&nbsp;
+          </el-col>
+          <el-col :span="2" v-if="pedido.moneda == codigoUSD">
+            {{ fmonto(partida.impuestosUSD) }} {{codigoUSD}}&nbsp;
+          </el-col>
+          <el-col :span="2" v-if="pedido.moneda == codigoMXN">
+            {{ fmonto(partida.total) }} {{codigoMXN}}&nbsp;
+          </el-col>
+          <el-col :span="2" v-if="pedido.moneda == codigoUSD">
+            {{ fmonto(partida.totalUSD) }} {{codigoUSD}}&nbsp;
+          </el-col>
+          <el-col :span="2">{{ partida.unidadMedida }}&nbsp;</el-col>
+          <el-col :span="2">{{ partida.existencia }}&nbsp;</el-col>
           <el-col :span="2">&nbsp;</el-col>
         </el-row>
       </div> <!-- partidas -->
 
       <!-- totales -->
-      <div id="totales">
+      <div id="totales" v-if="pedido.cliente.cardCode">
         <el-row>
           <el-col :span="2" :offset="14">Subtotal</el-col>
-          <el-col :span="2">{{ pedido.subTotal }}</el-col>
+          <el-col :span="2" align="right" v-if="pedido.moneda == codigoMXN">
+            {{ fmonto(pedido.subTotal) }} {{codigoMXN}}
+          </el-col>
+          <el-col :span="2" align="right" v-if="pedido.moneda == codigoUSD">
+            {{ fmonto(pedido.subTotalUSD) }} {{codigoUSD}}
+          </el-col>
         </el-row>
         <el-row>
           <el-col :span="2" :offset="14">Impuestos</el-col>
-          <el-col :span="2">{{ pedido.impuestos }}</el-col>
+          <el-col :span="2" align="right" v-if="pedido.moneda == codigoMXN">
+            {{ fmonto(pedido.impuestos) }} {{codigoMXN}}
+          </el-col>
+          <el-col :span="2" align="right" v-if="pedido.moneda == codigoUSD">
+            {{ fmonto(pedido.impuestosUSD) }} {{codigoUSD}}
+          </el-col>
         </el-row>
         <el-row>
           <el-col :span="2" :offset="14">Total</el-col>
-          <el-col :span="2">{{ pedido.total }}</el-col>
+          <el-col :span="2" align="right" v-if="pedido.moneda == codigoMXN">
+            {{ fmonto(pedido.total) }} {{codigoMXN}}
+          </el-col>
+          <el-col :span="2" align="right" v-if="pedido.moneda == codigoUSD">
+            {{ fmonto(pedido.totalUSD) }} {{codigoUSD}}
+          </el-col>
         </el-row>
       </div> <!-- totales -->
 
-      <div id="comentarios">
+      <div id="comentarios" v-if="pedido.cliente.cardCode">
         <el-row>
           <el-col :span="4">Comentarios</el-col>
           <el-col :span="12">
@@ -113,36 +166,288 @@
       </div>
 
       <div id="toolbar">
-        <el-button type="primary">Guardar</el-button>
+        <el-button type="primary" :disabled="!pedido.cliente.cardCode"
+                   @click="guardar">Guardar</el-button>
         <el-button @click="cancelar">Cancelar</el-button>
       </div>
-
     </div> <!-- contenido -->
   </div>
 </template>
 
 <script>
 import * as PedidoService from './PedidoService'
+import $ from 'jquery'
+import numeral from 'numeral'
+import moment from 'moment'
 
 const data = () => {
   return {
-    pedido: PedidoService.pedido
+    pedido: {...PedidoService.pedido},
+    textoCliente: '',
+    direcciones: [],
+    currentRow: -1,
+    codigoMXN: '',
+    codigoUSD: ''
   }
 }
 
 const metodos = {
-  cancelar () {
-    this.$router.push('/pedidos-list')
+  validaCantidad (index) {
+    const valor = this.pedido.partidas[index].cantidad
+    if (Number.isNaN(Number.parseFloat(valor))) {
+      this.$message.error('Cantidad invalida')
+      this.pedido.partidas[index].cantidad = 0
+    }
   },
-  recalcular (index) {
-    console.log(index)
+  producto_onfocus (index) {
+    this.currentRow = index
+  },
+  producto_onblur (index) {
+    this.currentRow = -1
+  },
+  async guardar () {
+    try {
+      const pedido = JSON.stringify(this.pedido)
+      const request = {
+        url: '/GAPA/vue/pedido',
+        method: 'POST',
+        data: {
+          pedido: pedido
+        }
+      }
+      const respuesta = await $.ajax(request)
+      if (respuesta.success) {
+        respuesta.pedido.partidas.sort(function (a, b) { return a.secuencia - b.secuencia })
+        this.pedido = respuesta.pedido
+        this.$message.success('El pedido se guardo correctamente')
+        // this.$router.push('/pedidos-list')
+        return
+      } else {
+        if (respuesta.error.message) {
+          this.$notify.error({
+            title: 'No se guardo el pedido',
+            message: respuesta.error.message
+          })
+        } else if (respuesta.error.length > 0) {
+          respuesta.error.map(error => {
+            setTimeout(() => {
+              this.$notify.error(error.message)
+            }, 500)
+          })
+        } else {
+          this.$message.error('El pedido no pudo guardarse')
+        }
+      } // false de "if (respuesta.success) {"
+    } catch (e) {
+      if (e.status === 401) {
+        this.$message.error('Expiro la sesion')
+        this.$router.push('/login')
+        return
+      }
+      this.$notify.error({
+        title: 'Ocurrio un error',
+        message: e
+      })
+    } // try/catch
+  }, // guardar
+  querySearch (term, cb) {
+    $.get('/GAPA/vue/cliente?term=' + term).then(function (data) {
+      cb(data)
+    })
+  },
+  selectCliente (cliente) {
+    this.pedido.cliente = cliente
+    this.pedido.direccionEntrega = ''
+    this.direcciones = []
+    this.pedido.moneda = cliente.currency
+    const _this = this
+    $.get('/GAPA/vue/direccion', {cardCode: this.pedido.cliente.cardCode})
+      .then(function (data) {
+        _this.direcciones = data
+      })
+  },
+  validaCliente (event) {
+    this.textoCliente = this.pedido.cliente.cardName
+  },
+  fmonto (rawValue) {
+    const monto = numeral(rawValue).format('0,0.00')
+    return monto
+  },
+  ffecha (rawDate) {
+    let theValue = null
+    if (rawDate) theValue = moment(rawDate).format('DD-MM-YYYY')
+    return theValue
+  },
+  async autocompleteProducto (term, cb) {
+    try {
+      if (term.length > 2) {
+        const params = {cardCode: this.pedido.cliente.cardCode, term: term}
+        const consulta = await $.get('/GAPA/producto/autocompleteTodos', params)
+        cb(consulta)
+      } else {
+        const noquery = []
+        cb(noquery)
+      }
+    } catch (e) {
+      this.$notify({
+        title: 'Ocurrio un error',
+        message: e,
+        type: 'error'
+      })
+    }
+  },
+  selectProducto (producto) {
+    const rowIndex = this.currentRow
+    const partida = this.pedido.partidas[rowIndex]
+
+    partida.itemCode = producto.id
+    partida.itemName = producto.value
+    partida.precio = producto.precio
+    partida.moneda = producto.moneda
+    partida.precioPesos = producto.precioPesos
+    partida.precioDolares = producto.precioDolares
+    partida.tasaIva = producto.tasaIva
+    partida.factorIva = partida.tasaIva === 16 ? 0.16 : 0
+    this.calcularPartida(rowIndex)
+    this.agregarPartidaBlank()
+  },
+  calcularPartida (index) {
+    const partida = this.pedido.partidas[index]
+    const subtotalPesos = partida.cantidad * partida.precioPesos
+    const subtotalDolares = partida.cantidad * partida.precioDolares
+    const impuestosPesos = subtotalPesos * partida.factorIva
+    const impuestosDolares = subtotalDolares * partida.factorIva
+    const totalPesos = subtotalPesos + impuestosPesos
+    const totalDolares = subtotalDolares + impuestosDolares
+
+    partida.impuestos = impuestosPesos
+    partida.total = totalPesos
+
+    partida.impuestosUSD = impuestosDolares
+    partida.totalUSD = totalDolares
+
+    this.calcularTotales()
+  },
+  calcularTotales () {
+    let subTotal = 0
+    let subTotalUSD = 0
+    let impuestos = 0
+    let impuestosUSD = 0
+    let total = 0
+    let totalUSD = 0
+
+    this.pedido.partidas.map(function (el) {
+      subTotal += el.precioPesos * el.cantidad
+      subTotalUSD += el.precioDolares * el.cantidad
+      impuestos += el.impuestos
+      impuestosUSD += el.impuestosUSD
+      return el
+    })
+    total = subTotal + impuestos
+    totalUSD = subTotalUSD + impuestosUSD
+    this.pedido.subTotal = subTotal
+    this.pedido.subTotalUSD = subTotalUSD
+    this.pedido.impuestos = impuestos
+    this.pedido.impuestosUSD = impuestosUSD
+    this.pedido.total = total
+    this.pedido.totalUSD = totalUSD
+  },
+  agregarPartidaBlank () {
+    const lastIndex = this.pedido.partidas.length - 1
+    if (this.pedido.partidas[lastIndex].itemCode !== '') {
+      this.pedido.partidas.push({
+        id: 0,
+        itemCode: '',
+        itemName: '',
+        texto: '',
+        cantidad: 0,
+        precio: 0,
+        moneda: '',
+        precioPesos: 0,
+        precioDolares: 0,
+        tasaIva: 0,
+        factorIva: 0,
+        impuestos: 0,
+        impuestosUSD: 0,
+        total: 0,
+        totalUSD: 0,
+        unidadMedida: '0',
+        existencia: 0
+      })
+    }
+  },
+  cancelar () {
+    const _this = this
+    const request = {
+      url: `/GAPA/vue/pedido/${this.pedido.id}`,
+      method: 'DELETE',
+      data: {id: this.pedido.id}
+    }
+
+    $.ajax(request).done(function (data) {
+      if (data.success === false) {
+        _this.$notify({
+          title: 'Error al cancelar pedido',
+          message: data,
+          type: 'error'
+        })
+      }
+    }).fail(function (xhr, textStatus, errorThrown) {
+      if (textStatus === 401) {
+        _this.$message.error('Expiro la sesion')
+        _this.$router.push('/login')
+        return
+      }
+      _this.$notify({
+        title: 'Error al cancelar pedido',
+        message: errorThrown,
+        type: 'error'
+      })
+    })
+
+    this.$router.push('/pedidos-list')
+  }
+} // metodos
+
+const mounted = async function () {
+  const config = {
+    url: '/GAPA/vue/pedido',
+    data: { id: this.$props.id },
+    method: 'GET'
+  }
+
+  const loading = this.$loading.service({target: 'sin-cliente'})
+  try {
+    const consulta = await $.ajax(config)
+    this.direcciones = consulta.direcciones
+    this.pedido = consulta.pedido
+    this.codigoMXN = consulta.pedido.codigoMXN
+    this.codigoUSD = consulta.pedido.codigoUSD
+    this.textoCliente = this.pedido.cliente.cardName
+    this.pedido.partidas.sort(function (a, b) { return a.secuencia - b.secuencia })
+    loading.close()
+  } catch (e) {
+    loading.close()
+    if (e.status === 401) {
+      this.$message.error('Expiro la sesion')
+      this.$router.push('/login')
+      return
+    }
+
+    this.$notify({
+      title: 'Ocurrio un error',
+      message: e,
+      type: 'error'
+    })
   }
 }
 
 export default {
   name: 'Pedido',
+  props: ['id'],
   data: data,
-  methods: metodos
+  methods: metodos,
+  mounted: mounted
 }
 </script>
 <style>
@@ -150,13 +455,20 @@ export default {
     margin: 0 10px 0 10px;
   }
 
-  #partidas, #encabezado, #comentarios, #toolbar {
+  #partidas, #encabezado, #comentarios, #toolbar, #sin-cliente {
     margin: 15px 0 0 0;
     border: solid 1px lightgrey;
     padding: 5px;
   }
 
-  #toolbar {
+  #sin-cliente {
+    padding: 20px 0 20px 100px;
+    font-style: italic;
+    font-size: 14px;
+    color: blue;
+  }
+
+  #toolbar2 {
     padding: 10px 0 10px 15px;
   }
 
@@ -169,5 +481,26 @@ export default {
   }
   #th-partida {
     padding: 5px 0 5px 0;
+    background-color: #f2f2f2;
+    border-bottom: solid 1px lightgrey;
+  }
+  .opcion-cliente {
+    font-size: 8pt;
+    line-height: 12px;
+    border-top: dashed 1px lightgrey;
+  }
+  .op-alias {
+    padding-left: 20px;
+  }
+  .input-referencia {
+    padding: 0 25px 0 0;
+  }
+  .iguala-alto {
+    margin: 0 2px 0 2px;
+    padding: 6px 0 5px 0;
+  }
+  .input-cantidad {
+    width: 70px;
   }
 </style>
+<style src="@/assets/css/icons8.css"></style>

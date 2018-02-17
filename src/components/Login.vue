@@ -12,7 +12,7 @@
           <el-row>
             <el-col :span="8" :offset="2">Usuario</el-col>
             <el-col :span="12">
-              <el-input auto-complete="false" v-model="username">
+              <el-input auto-complete="false" v-model="username" :autofocus="true">
               </el-input>
             </el-col>
           </el-row>
@@ -22,7 +22,7 @@
               <el-input type="password" v-model="password" />
             </el-col>
           </el-row>
-          <el-row id="barra" type="flex" justify="center">
+          <el-row id="login-barra" type="flex" justify="center">
             <el-col :span="4">
               <el-button type="primary" @click="login">
                 Ingresar</el-button>
@@ -47,14 +47,20 @@ const metodos = {
         j_password: this.$data.password
       }
       const url = '/GAPA/j_spring_security_check'
-      await $.post(url, params)
+
+      try {
+        await $.post(url, params) // **hack
+      } catch (e) {
+        console.log(e.message)
+      }
       const respuesta = await $.post(url, params)
 
       /*   LOGIN EXITOSO  */
       if (respuesta.success) {
         const queryPrincipal = await $.get('/GAPA/vue/principal')
         this.$store.commit('login', queryPrincipal)
-        this.$router.push('/')
+        this.$router.push('/menu')
+        console.log('login exitoso, haciendo redirect a menu')
         return
       }
 
@@ -88,7 +94,7 @@ export default {
     height: 100%;
   }
 
-  #barra {
+  #login-barra {
     margin: 30px 0 0 0;
   }
   #login-card {

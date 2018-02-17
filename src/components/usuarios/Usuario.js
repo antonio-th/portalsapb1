@@ -8,7 +8,7 @@ const data = () => {
       vendedor: '',
       usuarios: '',
       password: '',
-      rol: '',
+      role: '',
       almacen: '',
       proyecto: '',
       dimension1: '',
@@ -32,7 +32,6 @@ const methods = {
       } else {
         if (respuesta.errores.errors.length > 0) {
           respuesta.errores.errors.map(error => {
-            console.log('dentro de map')
             setTimeout(() => {
               this.$notify.error(error.message)
             }, 500)

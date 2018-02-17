@@ -1,8 +1,3 @@
-export let direccionEntrega = {
-  shipToCode: '',
-  direccion: ''
-}
-
 export let cliente = {
   cardCode: '',
   cardName: '',
@@ -11,14 +6,23 @@ export let cliente = {
 
 export let partida = {
   id: 0,
-  itemCode: 'HB30060',
-  itemName: 'jabon para manos',
-  cantidad: 2,
-  precio: 20,
-  impuestos: 0.2,
+  secuencia: 0,
+  itemCode: '',
+  itemName: '',
+  texto: '',
+  cantidad: 0,
+  precio: 0,
+  moneda: '',
+  precioPesos: 0,
+  precioDolares: 0,
+  tasaIva: 0,
+  factorIva: 0,
+  impuestos: 0,
+  impuestosUSD: 0,
   total: 0,
-  unidadMedida: 'PZA',
-  existencia: 20
+  totalUSD: 0,
+  unidadMedida: '0',
+  existencia: 0
 }
 
 export let pedido = {
@@ -28,12 +32,15 @@ export let pedido = {
   estatus: '',
   fechaEntrega: null,
   referencia: '',
-  direccionEntrega: direccionEntrega,
+  direccionEntrega: '',
   moneda: '',
   cliente: cliente,
   partidas: [partida],
   comentarios: '',
   subTotal: 0,
+  subTotalUSD: 0,
   impuestos: 0,
-  total: 0
+  impuestosUSD: 0,
+  total: 0,
+  totalUSD: 0
 }

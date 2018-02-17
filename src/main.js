@@ -9,7 +9,7 @@ import '@/assets/css/main.css'
 import {Button, Container, Header, Main, Aside, Footer,
   Message, Alert, Loading, MessageBox, Confirm, Notification,
   Row, Col, Input, Select, DatePicker, Table, TableColumn, Pagination,
-  Option, Card
+  Option, Card, Autocomplete
 } from 'element-ui'
 import lang from 'element-ui/lib/locale/lang/es'
 import locale from 'element-ui/lib/locale'
@@ -27,6 +27,7 @@ Vue.use(Footer)
 Vue.use(Row)
 Vue.use(Col)
 Vue.use(Input)
+Vue.use(Autocomplete)
 Vue.use(Select)
 Vue.use(Option)
 Vue.use(DatePicker)

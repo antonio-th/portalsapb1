@@ -2,8 +2,8 @@
   <div id="pedidos-list">
     <!-- Tool bar -->
     <div class="nav">
-      <span class="menuButton"><router-link to="/" class="home">Inicio</router-link></span>
-      <span class="menuButton"><router-link to="/pedido" class="create">Nuevo Pedido</router-link></span>
+      <span class="menuButton"><router-link to="/menu" class="home">Inicio</router-link></span>
+      <span class="menuButton"><a href="#" @click="crearPedido" class="create">Nuevo Pedido</a></span>
     </div>
 
     <!-- contenido -->
@@ -115,7 +115,7 @@ const methods = {
       const offset = (this.currentPage - 1) * this.pageSize
       const where = JSON.stringify(this.$data.filtros)
       const params = {max: this.$data.pageSize, offset: offset, filtros: where}
-      const response = await $.post('/GAPA/vue/pedido', params)
+      const response = await $.get('/GAPA/vue/pedido', params)
       if (response.listado) {
         this.$data.pedidos = response.listado
         this.$data.totalRegistros = response.totalRegistros
@@ -153,6 +153,24 @@ const methods = {
   },
   editar (index, row) {
     this.$router.push({ name: 'Pedido', params: { id: row.id } })
+  },
+  async crearPedido () {
+    try {
+      const pedido = await $.get('/GAPA/vue/crearPedido')
+      this.$router.push({name: 'Pedido', params: {id: pedido.id}})
+    } catch (e) {
+      if (e.status === 401) {
+        this.$message.error('Expiro la sesion')
+        this.$router.push('/login')
+        return
+      }
+
+      this.$notify({
+        title: 'Ocurrio un error',
+        message: e,
+        type: 'error'
+      })
+    }
   }
 }
 

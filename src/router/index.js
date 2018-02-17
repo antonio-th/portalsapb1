@@ -13,10 +13,11 @@ function load (component) {
 
 export default new Router({
   routes: [
-    { path: '/', component: load('Default') },
+    { path: '/menu', component: load('Default') },
+    { path: '/', component: load('Login') },
     { path: '/login', component: load('Login') },
     { path: '/pedidos-list', component: PedidosList },
-    { path: '/pedido', component: Pedido },
+    { path: '/pedido', name: 'Pedido', component: Pedido, props: true },
     { path: '/usuarios-list', component: UsuariosList },
     { path: '/usuario', name: 'Usuario', component: Usuario, props: true }
   ]

@@ -1,0 +1,53 @@
+/*
+ * Icon Font SAP
+ * Made with love by Icons8 [ https://icons8.com/ ] using FontCustom [ https://github.com/FontCustom/fontcustom ]
+ *
+ * Contacts:
+ *    [ https://icons8.com/contact ]
+ *
+ * Follow Icon8 on
+ *    Twitter [ https://twitter.com/icons_8 ]
+ *    Facebook [ https://www.facebook.com/Icons8 ]
+ *    Google+ [ https://plus.google.com/+Icons8 ]
+ *    GitHub [ https://github.com/icons8 ]
+ */
+
+
+@font-face {
+  font-family: "SAP";
+  src: url("../fonts/SAP_1a13180527f99b5fa8b8767f029e9d1d.eot");
+  src: url("../fonts/SAP_1a13180527f99b5fa8b8767f029e9d1d.eot?#iefix") format("embedded-opentype"),
+       url("../fonts/SAP_1a13180527f99b5fa8b8767f029e9d1d.woff2") format("woff2"),
+       url("../fonts/SAP_1a13180527f99b5fa8b8767f029e9d1d.woff") format("woff"),
+       url("../fonts/SAP_1a13180527f99b5fa8b8767f029e9d1d.ttf") format("truetype"),
+       url("../fonts/SAP_1a13180527f99b5fa8b8767f029e9d1d.svg#SAP") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: "SAP";
+    src: url("../fonts/SAP_1a13180527f99b5fa8b8767f029e9d1d.svg#SAP") format("svg");
+  }
+}
+
+[data-icons8]:before { content: attr(data-icons8); }
+
+.icons8, [data-icons8]:before,
+.icons8-sap:before {
+  display: inline-block;
+  font-family: "SAP";
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  line-height: 1;
+  text-decoration: inherit;
+  text-rendering: optimizeLegibility;
+  text-transform: none;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  font-smoothing: antialiased;
+}
+
+.icons8-sap:before { content: "\f106"; }

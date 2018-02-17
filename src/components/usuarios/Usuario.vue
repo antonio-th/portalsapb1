@@ -2,7 +2,7 @@
     <div id="Usuario">
       <!-- Tool bar -->
       <div class="nav">
-        <span class="menuButton"><router-link to="/" class="home">Inicio</router-link></span>
+        <span class="menuButton"><router-link to="/menu" class="home">Inicio</router-link></span>
         <span class="menuButton"><router-link to="/usuarios-list" class="list">Listado</router-link></span>
       </div>
 
@@ -56,9 +56,9 @@
           <el-row>
             <el-col :span="4">Perfil</el-col>
             <el-col :span="6">
-              <el-select v-model="usuario.rol">
-                <el-option value="ROL_ADMIN">ROL_ADMIN</el-option>
-                <el-option value="ROL_VENDEDOR">ROL_VENDEDODR</el-option>
+              <el-select v-model="usuario.role">
+                <el-option value="ROLE_ADMIN">ROLE_ADMIN</el-option>
+                <el-option value="ROLE_VENDEDOR">ROLE_VENDEDODR</el-option>
               </el-select>
             </el-col>
           </el-row>
