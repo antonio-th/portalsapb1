@@ -8,6 +8,7 @@ export let partida = {
   id: 0,
   secuencia: 0,
   itemCode: '',
+  bcdcode: '',
   itemName: '',
   texto: '',
   cantidad: 0,
@@ -22,6 +23,7 @@ export let partida = {
   total: 0,
   totalUSD: 0,
   unidadMedida: '0',
+  unidades: [],
   existencia: 0
 }
 

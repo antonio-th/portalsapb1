@@ -18,6 +18,9 @@ import moment from 'moment'
 moment.locale('es')
 
 locale.use(lang)
+
+Vue.directive('loading', Loading)
+
 Vue.use(Button)
 Vue.use(Container)
 Vue.use(Header)

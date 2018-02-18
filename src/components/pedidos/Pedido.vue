@@ -10,7 +10,7 @@
       </span>
     </div>
 
-    <div id="contenido">
+    <div id="contenido" v-loading="loading">
       <h1>Pedido</h1>
 
       <!-- Encabezado -->
@@ -80,7 +80,7 @@
       <!-- Partidas -->
       <div id="partidas" v-if="pedido.cliente.cardCode">
         <el-row id="th-partida">
-          <el-col :span="4">Codigo</el-col>
+          <el-col :span="4">Codigo - BCD</el-col>
           <el-col :span="6">Descripcion</el-col>
           <el-col :span="2">Cantidad</el-col>
           <el-col :span="2">Precio</el-col>
@@ -91,13 +91,22 @@
           <el-col :span="2">&nbsp;</el-col>
         </el-row>
         <el-row v-for="(partida, index) in pedido.partidas" :key="index">
-          <el-col :span="4">{{ partida.itemCode}}&nbsp;</el-col>
+          <el-col :span="4">
+            {{ partida.itemCode}} - {{ partida.bcdcode }}&nbsp;
+          </el-col>
           <el-col :span="6">
             <el-autocomplete :fetch-suggestions="autocompleteProducto"
                  :trigger-on-focus="false" @select="selectProducto"
                 :data-index="index" @focus="producto_onfocus(index)"
                  @blur="producto_onblur(index)"
                 size="mini" v-model="partida.texto">
+              <template slot-scope="props">
+                <div class="opcion-cliente">
+                  <div>{{ props.item.id }}</div>
+                  <div>{{ props.item.value }}</div>
+                  <div>{{ props.item.bcdcode }} - {{ props.item.UomName }}</div>
+                 </div>
+              </template>
             </el-autocomplete>
           </el-col>
           <el-col :span="2">
@@ -118,7 +127,9 @@
           <el-col :span="2" v-if="pedido.moneda == codigoUSD">
             {{ fmonto(partida.totalUSD) }} {{codigoUSD}}&nbsp;
           </el-col>
-          <el-col :span="2">{{ partida.unidadMedida }}&nbsp;</el-col>
+          <el-col :span="2">
+            <select :id="genera(index)" @change="selUm(index)"></select>
+          </el-col>
           <el-col :span="2">{{ partida.existencia }}&nbsp;</el-col>
           <el-col :span="2">&nbsp;</el-col>
         </el-row>
@@ -166,9 +177,15 @@
       </div>
 
       <div id="toolbar">
+        <span v-if="!readonly">
         <el-button type="primary" :disabled="!pedido.cliente.cardCode"
-                   @click="guardar">Guardar</el-button>
+                   @click="guardar(false)">Guardar</el-button>
+        <el-button @click="sap" :disabled="loading">SAP</el-button>
         <el-button @click="cancelar">Cancelar</el-button>
+        </span>
+        <span v-if="readonly">
+          <el-button @click="regresar" type="primary">Ok</el-button>
+        </span>
       </div>
     </div> <!-- contenido -->
   </div>
@@ -179,6 +196,8 @@ import * as PedidoService from './PedidoService'
 import $ from 'jquery'
 import numeral from 'numeral'
 import moment from 'moment'
+import * as util from '@/Utils.js'
+import _ from 'lodash'
 
 const data = () => {
   return {
@@ -187,11 +206,53 @@ const data = () => {
     direcciones: [],
     currentRow: -1,
     codigoMXN: '',
-    codigoUSD: ''
+    codigoUSD: '',
+    loading: false,
+    readonly: true
   }
 }
 
 const metodos = {
+  regresar () {
+    this.$router.push('/pedidos-list')
+  },
+  async sap () {
+    let loading
+    this.loading = true
+
+    const config = {
+      url: '/GAPA/vue/sap',
+      methd: 'GET',
+      data: {
+        id: this.pedido.id
+      }
+    }
+
+    try {
+      loading = this.$loading.service({target: 'sin-cliente'})
+      await this.guardar(true)
+      const response = await $.ajax(config)
+      loading.close()
+      if (response.success) {
+        this.$message.success('El documento se genero correctamente')
+        this.pedido = response.pedido
+      } else {
+        util.showErrors(response, this)
+      }
+    } catch (e) {
+      loading.close()
+      console.log(e)
+      util.showStatusText(e, this)
+    }
+
+    this.loading = false
+  }, // end SAP
+  genera (index) {
+    return 'um-' + index
+  },
+  selUm (index) {
+    this.pedido.partidas[index].unidadMedida = $('um-' + index).val()
+  },
   validaCantidad (index) {
     const valor = this.pedido.partidas[index].cantidad
     if (Number.isNaN(Number.parseFloat(valor))) {
@@ -205,7 +266,7 @@ const metodos = {
   producto_onblur (index) {
     this.currentRow = -1
   },
-  async guardar () {
+  async guardar (sap) {
     try {
       const pedido = JSON.stringify(this.pedido)
       const request = {
@@ -219,9 +280,12 @@ const metodos = {
       if (respuesta.success) {
         respuesta.pedido.partidas.sort(function (a, b) { return a.secuencia - b.secuencia })
         this.pedido = respuesta.pedido
+        if (sap) {
+          return true
+        }
+
         this.$message.success('El pedido se guardo correctamente')
-        // this.$router.push('/pedidos-list')
-        return
+        this.$router.push('/pedidos-list')
       } else {
         if (respuesta.error.message) {
           this.$notify.error({
@@ -250,10 +314,23 @@ const metodos = {
       })
     } // try/catch
   }, // guardar
-  querySearch (term, cb) {
-    $.get('/GAPA/vue/cliente?term=' + term).then(function (data) {
-      cb(data)
-    })
+  async querySearch (term, cb) {
+    try {
+      console.log('haciendo consulta')
+      let respuesta = await $.get('/GAPA/vue/cliente?term=' + term)
+      if (respuesta.status === 401) {
+        this.$message.error('Expiro la sesion')
+        this.$router.push('/login')
+        return
+      }
+
+      cb(respuesta)
+    } catch (e) {
+      this.$notify.error({
+        title: 'Ocurrio un error',
+        message: e
+      })
+    }
   },
   selectCliente (cliente) {
     this.pedido.cliente = cliente
@@ -301,6 +378,9 @@ const metodos = {
     const partida = this.pedido.partidas[rowIndex]
 
     partida.itemCode = producto.id
+    partida.bcdcode = producto.bcdcode
+    partida.unidadMedida = producto.unidadMedida
+    partida.existencia = producto.existencia
     partida.itemName = producto.value
     partida.precio = producto.precio
     partida.moneda = producto.moneda
@@ -310,21 +390,25 @@ const metodos = {
     partida.factorIva = partida.tasaIva === 16 ? 0.16 : 0
     this.calcularPartida(rowIndex)
     this.agregarPartidaBlank()
+
+    const config = {bcdcode: partida.bcdcode, itemcode: partida.itemCode}
+    $.get('/GAPA/vue/unidadMedida', config).then(function (data) {
+      let cmb = $('#um-' + rowIndex)
+      cmb.empty()
+      $.each(data, function (i, item) {
+        cmb.append('<option>' + item.umcode + '</option>')
+      })
+    })
   },
   calcularPartida (index) {
     const partida = this.pedido.partidas[index]
     const subtotalPesos = partida.cantidad * partida.precioPesos
     const subtotalDolares = partida.cantidad * partida.precioDolares
-    const impuestosPesos = subtotalPesos * partida.factorIva
-    const impuestosDolares = subtotalDolares * partida.factorIva
-    const totalPesos = subtotalPesos + impuestosPesos
-    const totalDolares = subtotalDolares + impuestosDolares
+    partida.impuestos = subtotalPesos * partida.factorIva
+    partida.total = subtotalPesos + partida.impuestos
 
-    partida.impuestos = impuestosPesos
-    partida.total = totalPesos
-
-    partida.impuestosUSD = impuestosDolares
-    partida.totalUSD = totalDolares
+    partida.impuestosUSD = subtotalDolares * partida.factorIva
+    partida.totalUSD = subtotalDolares + partida.impuestosUSD
 
     this.calcularTotales()
   },
@@ -336,15 +420,20 @@ const metodos = {
     let total = 0
     let totalUSD = 0
 
-    this.pedido.partidas.map(function (el) {
-      subTotal += el.precioPesos * el.cantidad
-      subTotalUSD += el.precioDolares * el.cantidad
-      impuestos += el.impuestos
-      impuestosUSD += el.impuestosUSD
-      return el
+    _.forEach(this.pedido.partidas, function (partida) {
+      console.log('Precio ' + partida.precioPesos + ' Dolar ' + partida.precioDolares)
     })
+
+    _.forEach(this.pedido.partidas, function (partida) {
+      subTotal += partida.precioPesos * partida.cantidad
+      subTotalUSD += partida.precioDolares * partida.cantidad
+      impuestos += partida.impuestos
+      impuestosUSD += partida.impuestosUSD
+    })
+
     total = subTotal + impuestos
     totalUSD = subTotalUSD + impuestosUSD
+
     this.pedido.subTotal = subTotal
     this.pedido.subTotalUSD = subTotalUSD
     this.pedido.impuestos = impuestos
@@ -416,8 +505,9 @@ const mounted = async function () {
     method: 'GET'
   }
 
-  const loading = this.$loading.service({target: 'sin-cliente'})
+  let loading
   try {
+    loading = this.$loading.service({target: 'sin-cliente'})
     const consulta = await $.ajax(config)
     this.direcciones = consulta.direcciones
     this.pedido = consulta.pedido
@@ -425,6 +515,23 @@ const mounted = async function () {
     this.codigoUSD = consulta.pedido.codigoUSD
     this.textoCliente = this.pedido.cliente.cardName
     this.pedido.partidas.sort(function (a, b) { return a.secuencia - b.secuencia })
+
+    this.pedido.partidas.map(function (el, index) {
+      el.factorIva = el.tasaIva === 16 ? 0.16 : 0
+      const config = {bcdcode: el.bcdcode, itemcode: el.itemCode}
+      $.get('/GAPA/vue/unidadMedida', config).then(function (data) {
+        let cmb = $('#um-' + index)
+        cmb.empty()
+        $.each(data, function (i, item) {
+          cmb.append('<option>' + item.umcode + '</option>')
+        })
+      })
+    }) // Generar los selectores para las unidades de medida
+
+    if (this.pedido.estatus === 'Capturando') {
+      this.readonly = false
+    }
+
     loading.close()
   } catch (e) {
     loading.close()
