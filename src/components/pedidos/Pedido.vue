@@ -235,6 +235,7 @@ const metodos = {
       loading.close()
       if (response.success) {
         this.$message.success('El documento se genero correctamente')
+        this.readonly = true
         this.pedido = response.pedido
       } else {
         util.showErrors(response, this)

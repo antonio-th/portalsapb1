@@ -25,6 +25,8 @@
               :clearable="true">
               <el-option value="Capturando">Capturando</el-option>
               <el-option value="Enviado">Enviado</el-option>
+              <el-option value="Cerrado">Cerrado</el-option>
+              <el-option value="Cancelado">Cancelado</el-option>
             </el-select>
             <el-button type="primary"
                        @click="buscar"
@@ -58,8 +60,12 @@
             <template slot-scope="scope">
               <i class="el-icon-edit"
                  v-if="scope.row.estatus == 'Capturando'"></i>
-              <i class="el-icon-check"
+              <i class="el-icon-document"
                  v-if="scope.row.estatus == 'Enviado'"></i>
+              <i class="el-icon-success"
+                 v-if="scope.row.estatus == 'Cerrado'"></i>
+              <i class="el-icon-close"
+                 v-if="scope.row.estatus == 'Cancelado'"></i>
             </template>
           </el-table-column>
           <el-table-column v-bind:width="60">
@@ -79,7 +85,9 @@
 
       <div id="leyendas">
         <i class="el-icon-edit"></i> - Capturando
-        <i class="el-icon-check"></i> - Enviado
+        <i class="el-icon-document"></i> - Enviado
+        <i class="el-icon-success"></i> - Cerrado
+        <i class="el-icon-close"></i> - Cancelado
       </div>
 
     </div> <!-- contenido -->
