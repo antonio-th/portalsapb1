@@ -234,7 +234,7 @@ const metodos = {
       const response = await $.ajax(config)
       loading.close()
       if (response.success) {
-        this.$message.success('El documento se genero correctamente')
+        this.$message.success('El documento se genero correctamente en SAP')
         this.readonly = true
         this.pedido = response.pedido
       } else {
@@ -252,7 +252,17 @@ const metodos = {
     return 'um-' + index
   },
   selUm (index) {
-    this.pedido.partidas[index].unidadMedida = $('um-' + index).val()
+    const elemento = $('#um-' + index)
+    const valor = elemento.val()
+    const partida = this.pedido.partidas[index]
+    const unidad = _.find(partida.unidades, ['umentry', parseInt(valor)])
+    console.log('valor ' + valor + ', unidad ' + unidad)
+    console.log(unidad)
+    partida.unidadMedida = valor
+    partida.precio = partida.precioBase * unidad.baseqty
+    partida.precioPesos = partida.precioBasePesos * unidad.baseqty
+    partida.precioDolares = partida.precioBaseDolares * unidad.baseqty
+    this.calcularPartida(index)
   },
   validaCantidad (index) {
     const valor = this.pedido.partidas[index].cantidad
@@ -265,7 +275,11 @@ const metodos = {
     this.currentRow = index
   },
   producto_onblur (index) {
-    this.currentRow = -1
+    const _this = this
+    setTimeout(function () {
+      const partida = _this.pedido.partidas[index]
+      partida.texto = partida.itemName
+    }, 150)
   },
   async guardar (sap) {
     try {
@@ -279,8 +293,7 @@ const metodos = {
       }
       const respuesta = await $.ajax(request)
       if (respuesta.success) {
-        respuesta.pedido.partidas.sort(function (a, b) { return a.secuencia - b.secuencia })
-        this.pedido = respuesta.pedido
+        this.consultar()
         if (sap) {
           return true
         }
@@ -317,7 +330,6 @@ const metodos = {
   }, // guardar
   async querySearch (term, cb) {
     try {
-      console.log('haciendo consulta')
       let respuesta = await $.get('/GAPA/vue/cliente?term=' + term)
       if (respuesta.status === 401) {
         this.$message.error('Expiro la sesion')
@@ -380,9 +392,13 @@ const metodos = {
 
     partida.itemCode = producto.id
     partida.bcdcode = producto.bcdcode
-    partida.unidadMedida = producto.unidadMedida
+    partida.unidadMedida = 0
+    partida.unidades = []
     partida.existencia = producto.existencia
     partida.itemName = producto.value
+    partida.precioBase = producto.precio
+    partida.precioBasePesos = producto.precioPesos
+    partida.precioBaseDolares = producto.precioDolares
     partida.precio = producto.precio
     partida.moneda = producto.moneda
     partida.precioPesos = producto.precioPesos
@@ -391,14 +407,15 @@ const metodos = {
     partida.factorIva = partida.tasaIva === 16 ? 0.16 : 0
     this.calcularPartida(rowIndex)
     this.agregarPartidaBlank()
-
     const config = {bcdcode: partida.bcdcode, itemcode: partida.itemCode}
     $.get('/GAPA/vue/unidadMedida', config).then(function (data) {
+      partida.unidades = data
       let cmb = $('#um-' + rowIndex)
       cmb.empty()
       $.each(data, function (i, item) {
-        cmb.append('<option>' + item.umcode + '</option>')
+        cmb.append(`<option value='${item.umentry}'>${item.umcode}</option>`)
       })
+      partida.unidadMedida = cmb.val()
     })
   },
   calcularPartida (index) {
@@ -420,10 +437,6 @@ const metodos = {
     let impuestosUSD = 0
     let total = 0
     let totalUSD = 0
-
-    _.forEach(this.pedido.partidas, function (partida) {
-      console.log('Precio ' + partida.precioPesos + ' Dolar ' + partida.precioDolares)
-    })
 
     _.forEach(this.pedido.partidas, function (partida) {
       subTotal += partida.precioPesos * partida.cantidad
@@ -496,58 +509,62 @@ const metodos = {
     })
 
     this.$router.push('/pedidos-list')
+  },
+  async consultar () {
+    const config = {
+      url: '/GAPA/vue/pedido',
+      data: { id: this.$props.id },
+      method: 'GET'
+    }
+
+    let loading
+    try {
+      loading = this.$loading.service({target: 'sin-cliente'})
+      const consulta = await $.ajax(config)
+      this.direcciones = consulta.direcciones
+      this.pedido = consulta.pedido
+      this.codigoMXN = consulta.pedido.codigoMXN
+      this.codigoUSD = consulta.pedido.codigoUSD
+      this.textoCliente = this.pedido.cliente.cardName
+      this.pedido.partidas.sort(function (a, b) { return a.secuencia - b.secuencia })
+
+      this.pedido.partidas.map(function (el, index) {
+        el.factorIva = el.tasaIva === 16 ? 0.16 : 0
+        const config = {bcdcode: el.bcdcode, itemcode: el.itemCode}
+        $.get('/GAPA/vue/unidadMedida', config).then(function (data) {
+          let cmb = $('#um-' + index)
+          cmb.empty()
+          $.each(data, function (i, item) {
+            cmb.append(`<option value='${item.umentry}'>${item.umcode}</option>`)
+          })
+          cmb.val(el.unidadMedida)
+        })
+      }) // Generar los selectores para las unidades de medida
+
+      if (this.pedido.estatus === 'Capturando') {
+        this.readonly = false
+      }
+
+      loading.close()
+    } catch (e) {
+      loading.close()
+      if (e.status === 401) {
+        this.$message.error('Expiro la sesion')
+        this.$router.push('/login')
+        return
+      }
+
+      this.$notify({
+        title: 'Ocurrio un error',
+        message: e,
+        type: 'error'
+      })
+    }
   }
 } // metodos
 
 const mounted = async function () {
-  const config = {
-    url: '/GAPA/vue/pedido',
-    data: { id: this.$props.id },
-    method: 'GET'
-  }
-
-  let loading
-  try {
-    loading = this.$loading.service({target: 'sin-cliente'})
-    const consulta = await $.ajax(config)
-    this.direcciones = consulta.direcciones
-    this.pedido = consulta.pedido
-    this.codigoMXN = consulta.pedido.codigoMXN
-    this.codigoUSD = consulta.pedido.codigoUSD
-    this.textoCliente = this.pedido.cliente.cardName
-    this.pedido.partidas.sort(function (a, b) { return a.secuencia - b.secuencia })
-
-    this.pedido.partidas.map(function (el, index) {
-      el.factorIva = el.tasaIva === 16 ? 0.16 : 0
-      const config = {bcdcode: el.bcdcode, itemcode: el.itemCode}
-      $.get('/GAPA/vue/unidadMedida', config).then(function (data) {
-        let cmb = $('#um-' + index)
-        cmb.empty()
-        $.each(data, function (i, item) {
-          cmb.append('<option>' + item.umcode + '</option>')
-        })
-      })
-    }) // Generar los selectores para las unidades de medida
-
-    if (this.pedido.estatus === 'Capturando') {
-      this.readonly = false
-    }
-
-    loading.close()
-  } catch (e) {
-    loading.close()
-    if (e.status === 401) {
-      this.$message.error('Expiro la sesion')
-      this.$router.push('/login')
-      return
-    }
-
-    this.$notify({
-      title: 'Ocurrio un error',
-      message: e,
-      type: 'error'
-    })
-  }
+  this.consultar()
 }
 
 export default {

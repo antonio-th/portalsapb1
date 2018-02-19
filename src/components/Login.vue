@@ -60,7 +60,6 @@ const metodos = {
         const queryPrincipal = await $.get('/GAPA/vue/principal')
         this.$store.commit('login', queryPrincipal)
         this.$router.push('/menu')
-        console.log('login exitoso, haciendo redirect a menu')
         return
       }
 

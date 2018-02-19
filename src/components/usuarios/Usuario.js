@@ -5,7 +5,7 @@ const data = () => {
     usuario: {
       nombres: '',
       apellidos: '',
-      vendedor: '',
+      vendedor: 0,
       usuarios: '',
       password: '',
       role: '',
@@ -56,7 +56,7 @@ const methods = {
   async editar () {
     try {
       const usuario = await $.get('/GAPA/vue/usuario/' + this.$props.id)
-      this.$data.usuario = usuario[0]
+      this.usuario = usuario[0]
     } catch (e) {
       if (e.status == 401) {
         this.$message.error('Expiro la sesion')
@@ -89,10 +89,10 @@ export default {
   props: ['id'],
   data: data,
   methods: methods,
-  created () {
+  async created () {
+    await this.loadVendedores()
     if (this.$props.id) {
       this.editar()
     }
-    this.loadVendedores()
   }
 }

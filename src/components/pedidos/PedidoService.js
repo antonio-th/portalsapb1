@@ -12,6 +12,9 @@ export let partida = {
   itemName: '',
   texto: '',
   cantidad: 0,
+  precioBase: 0,
+  precioBasePesos: 0,
+  precioBaseDolares: 0,
   precio: 0,
   moneda: '',
   precioPesos: 0,
@@ -22,7 +25,7 @@ export let partida = {
   impuestosUSD: 0,
   total: 0,
   totalUSD: 0,
-  unidadMedida: '0',
+  unidadMedida: 0,
   unidades: [],
   existencia: 0
 }

@@ -37,7 +37,8 @@
       </div>
 
       <div id="listado">
-        <el-table :data="pedidos" size="mini" :stripe="true" :border="true">
+        <el-table :data="pedidos" size="mini" id="tblpedidos"
+                  :stripe="true" :border="true">
           <el-table-column prop="docNum" align="center"
                            label="DocNum" width="75px" />
           <el-table-column prop="razonSocial" header-align="center"
@@ -109,7 +110,8 @@ const data = () => {
     pedidos: [],
     pageSize: 10,
     currentPage: 1,
-    totalRegistros: 0
+    totalRegistros: 0,
+    loading: null
   }
 }
 
@@ -120,6 +122,7 @@ const methods = {
   },
   async consultar () {
     try {
+      this.loading = this.$loading.service({target: 'tblpedidos'})
       const offset = (this.currentPage - 1) * this.pageSize
       const where = JSON.stringify(this.$data.filtros)
       const params = {max: this.$data.pageSize, offset: offset, filtros: where}
@@ -141,6 +144,7 @@ const methods = {
         message: e
       })
     }
+    this.loading.close()
   },
   limpiar () {
     this.$data.filtros = {...data.filtros}
@@ -188,16 +192,14 @@ const computed = {
   }
 }
 
-const created = function () {
-  this.consultar()
-}
-
 export default {
   name: 'PedidosList',
   data: data,
   methods: methods,
   computed: computed,
-  created: created
+  mounted () {
+    this.consultar()
+  }
 }
 </script>
 
