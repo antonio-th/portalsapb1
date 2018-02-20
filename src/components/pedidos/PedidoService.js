@@ -1,7 +1,8 @@
 export let cliente = {
   cardCode: '',
   cardName: '',
-  cardFName: ''
+  cardFName: '',
+  mainusage: ''
 }
 
 export let partida = {
@@ -27,7 +28,8 @@ export let partida = {
   totalUSD: 0,
   unidadMedida: 0,
   unidades: [],
-  existencia: 0
+  existencia: 0,
+  existenciaBase: 0
 }
 
 export let pedido = {

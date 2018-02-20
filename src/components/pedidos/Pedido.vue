@@ -42,7 +42,7 @@
             <el-autocomplete style="width: 450px;" v-model="textoCliente"
                              @blur="validaCliente" :trigger-on-focus="false"
                              size="mini" :debounce="500" @select="selectCliente"
-                             :fetch-suggestions="querySearch">
+                             :fetch-suggestions="buscarCliente">
               <template slot-scope="props">
                 <div class="opcion-cliente">
                   <div><strong>{{ props.item.cardCode }} {{ props.item.cardFName }}</strong></div>
@@ -98,7 +98,7 @@
             <el-autocomplete :fetch-suggestions="autocompleteProducto"
                  :trigger-on-focus="false" @select="selectProducto"
                 :data-index="index" @focus="producto_onfocus(index)"
-                 @blur="producto_onblur(index)"
+                 @blur="producto_onblur(index)" style="width: 250px;"
                 size="mini" v-model="partida.texto">
               <template slot-scope="props">
                 <div class="opcion-cliente">
@@ -130,7 +130,7 @@
           <el-col :span="2">
             <select :id="genera(index)" @change="selUm(index)"></select>
           </el-col>
-          <el-col :span="2">{{ partida.existencia }}&nbsp;</el-col>
+          <el-col :span="2">{{ fmonto(partida.existencia) }}&nbsp;</el-col>
           <el-col :span="2">&nbsp;</el-col>
         </el-row>
       </div> <!-- partidas -->
@@ -232,11 +232,11 @@ const metodos = {
       loading = this.$loading.service({target: 'sin-cliente'})
       await this.guardar(true)
       const response = await $.ajax(config)
-      loading.close()
       if (response.success) {
-        this.$message.success('El documento se genero correctamente en SAP')
         this.readonly = true
         this.pedido = response.pedido
+        loading.close()
+        this.$message.success('El documento se genero correctamente en SAP')
       } else {
         util.showErrors(response, this)
       }
@@ -262,6 +262,9 @@ const metodos = {
     partida.precio = partida.precioBase * unidad.baseqty
     partida.precioPesos = partida.precioBasePesos * unidad.baseqty
     partida.precioDolares = partida.precioBaseDolares * unidad.baseqty
+    console.log(`existenciaBase ${partida.existenciaBase} baseqty ${unidad.baseqty}`)
+    partida.existencia = partida.existenciaBase / unidad.baseqty
+    console.log('existencia ' + partida.existencia)
     this.calcularPartida(index)
   },
   validaCantidad (index) {
@@ -328,7 +331,7 @@ const metodos = {
       })
     } // try/catch
   }, // guardar
-  async querySearch (term, cb) {
+  async buscarCliente (term, cb) {
     try {
       let respuesta = await $.get('/GAPA/vue/cliente?term=' + term)
       if (respuesta.status === 401) {
@@ -387,6 +390,8 @@ const metodos = {
     }
   },
   selectProducto (producto) {
+    console.log(producto)
+    const _this = this
     const rowIndex = this.currentRow
     const partida = this.pedido.partidas[rowIndex]
 
@@ -395,6 +400,7 @@ const metodos = {
     partida.unidadMedida = 0
     partida.unidades = []
     partida.existencia = producto.existencia
+    partida.existenciaBase = producto.existencia
     partida.itemName = producto.value
     partida.precioBase = producto.precio
     partida.precioBasePesos = producto.precioPesos
@@ -415,7 +421,7 @@ const metodos = {
       $.each(data, function (i, item) {
         cmb.append(`<option value='${item.umentry}'>${item.umcode}</option>`)
       })
-      partida.unidadMedida = cmb.val()
+      _this.selUm(rowIndex)
     })
   },
   calcularPartida (index) {

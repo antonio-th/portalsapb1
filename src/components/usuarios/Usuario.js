@@ -5,7 +5,7 @@ const data = () => {
     usuario: {
       nombres: '',
       apellidos: '',
-      vendedor: 0,
+      vendedor: '',
       usuarios: '',
       password: '',
       role: '',
@@ -55,7 +55,9 @@ const methods = {
   },
   async editar () {
     try {
+      console.log('cargando usuario')
       const usuario = await $.get('/GAPA/vue/usuario/' + this.$props.id)
+      console.log('usuario')
       this.usuario = usuario[0]
     } catch (e) {
       if (e.status == 401) {
@@ -71,7 +73,6 @@ const methods = {
   async loadVendedores() {
     try {
       const respuesta = await $.get('/GAPA/vue/vendedor')
-      console.log('respuesta')
       this.$data.vendedores = await respuesta
     } catch (e) {
       if (e.status == 401) {
@@ -90,7 +91,9 @@ export default {
   data: data,
   methods: methods,
   async created () {
+    console.log('cargando vendedores')
     await this.loadVendedores()
+    console.log('fin de carga')
     if (this.$props.id) {
       this.editar()
     }
