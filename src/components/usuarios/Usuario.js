@@ -73,7 +73,8 @@ const methods = {
   async loadVendedores() {
     try {
       const respuesta = await $.get('/GAPA/vue/vendedor')
-      this.$data.vendedores = await respuesta
+      console.log(JSON.stringify(respuesta))
+      this.vendedores = respuesta
     } catch (e) {
       if (e.status == 401) {
         this.$message.error('Expiro la sesion')

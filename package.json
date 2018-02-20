@@ -1,6 +1,6 @@
 {
   "name": "gapa-cli",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Cliente Web para Portal de Pedidos GAPA",
   "author": "Antonio Trujillo <antonio.trujillo01@gmail.com>",
   "private": true,

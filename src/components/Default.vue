@@ -15,7 +15,7 @@
             <div class="texto-opcion">Pedidos</div>
           </router-link>
         </div>
-        <div class="opcion">
+        <div class="opcion" v-if="isAdmin">
           <router-link to="/usuarios-list">
             <img src="../assets/img/usuarios.png" />
             <div class="texto-opcion">Usuarios</div>
@@ -28,7 +28,12 @@
 
 <script>
 export default {
-  name: 'Default'
+  name: 'Default',
+  computed: {
+    isAdmin () {
+      return this.$store.state.usuario.role === 'ROLE_ADMIN'
+    }
+  }
 }
 </script>
 <style>
