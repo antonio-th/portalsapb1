@@ -70,6 +70,13 @@
                          :label="direccion.direccion" />
             </el-select>
           </el-col>
+          <el-col :span="4">Forma de Envio</el-col>
+          <el-col :span="12">
+            <el-select v-model="pedido.formaenvio" size="mini" :clearable="true">
+              <el-option v-for="(item, index) in formaenvio"
+                         :key="index" :value="item.code" :label="item.name" />
+            </el-select>
+          </el-col>
         </el-row>
       </div> <!-- encabezado -->
 
@@ -181,7 +188,7 @@
         <el-button type="primary" :disabled="!pedido.cliente.cardCode"
                    @click="guardar(false)">Guardar</el-button>
         <el-button @click="sap" :disabled="loading">SAP</el-button>
-        <el-button @click="cancelar">Cancelar</el-button>
+        <el-button @click="cancelar" :disabled="loading">Cancelar</el-button>
         </span>
         <span v-if="readonly">
           <el-button @click="regresar" type="primary">Ok</el-button>
@@ -204,6 +211,7 @@ const data = () => {
     pedido: {...PedidoService.pedido},
     textoCliente: '',
     direcciones: [],
+    formaenvio: [],
     currentRow: -1,
     codigoMXN: '',
     codigoUSD: '',
@@ -217,7 +225,6 @@ const metodos = {
     this.$router.push('/pedidos-list')
   },
   async sap () {
-    let loading
     this.loading = true
 
     const config = {
@@ -229,19 +236,18 @@ const metodos = {
     }
 
     try {
-      loading = this.$loading.service({target: 'sin-cliente'})
+      this.$loading.service({target: 'sin-cliente'})
       await this.guardar(true)
       const response = await $.ajax(config)
       if (response.success) {
         this.readonly = true
-        this.pedido = response.pedido
-        loading.close()
         this.$message.success('El documento se genero correctamente en SAP')
+        this.$router.push('/pedidos-list')
       } else {
         util.showErrors(response, this)
       }
     } catch (e) {
-      loading.close()
+      this.$loading.service().close()
       console.log(e)
       util.showStatusText(e, this)
     }
@@ -320,6 +326,7 @@ const metodos = {
         }
       } // false de "if (respuesta.success) {"
     } catch (e) {
+      this.$loading.service().close()
       if (e.status === 401) {
         this.$message.error('Expiro la sesion')
         this.$router.push('/login')
@@ -516,6 +523,10 @@ const metodos = {
 
     this.$router.push('/pedidos-list')
   },
+  async cargaformaenvio () {
+    const response = await $.get('/GAPA/vue/formaenvio')
+    this.formaenvio = response
+  },
   async consultar () {
     const config = {
       url: '/GAPA/vue/pedido',
@@ -547,7 +558,7 @@ const metodos = {
         })
       }) // Generar los selectores para las unidades de medida
 
-      if (this.pedido.estatus === 'Capturando') {
+      if (this.pedido.estatus === 'Capturando' || this.pedido.estatus === 'Inicial') {
         this.readonly = false
       }
 
@@ -570,6 +581,7 @@ const metodos = {
 } // metodos
 
 const mounted = async function () {
+  await this.cargaformaenvio()
   this.consultar()
 }
 

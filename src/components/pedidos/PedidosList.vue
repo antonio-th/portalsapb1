@@ -134,6 +134,7 @@ const methods = {
     } catch (e) {
       if (e.status === 401) {
         this.$message.error('Expiro la sesion')
+        if (this.loading) this.loading.close()
         this.$router.push('/login')
         return
       }

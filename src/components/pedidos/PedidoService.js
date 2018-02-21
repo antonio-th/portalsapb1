@@ -40,6 +40,7 @@ export let pedido = {
   fechaEntrega: null,
   referencia: '',
   direccionEntrega: '',
+  formaenvio: null,
   moneda: '',
   cliente: cliente,
   partidas: [partida],
