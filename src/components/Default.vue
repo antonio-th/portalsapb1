@@ -21,6 +21,12 @@
             <div class="texto-opcion">Usuarios</div>
           </router-link>
         </div>
+        <div class="opcion">
+          <router-link to="/pedidos-list">
+            <img src="../assets/img/stock.png">
+            <div class="texto-opcion">Existencias</div>
+          </router-link>
+        </div>
       </div>
     </div>
   </div>
