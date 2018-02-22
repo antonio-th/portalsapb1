@@ -9,7 +9,7 @@ import '@/assets/css/main.css'
 import {Button, Container, Header, Main, Aside, Footer,
   Message, Alert, Loading, MessageBox, Confirm, Notification,
   Row, Col, Input, Select, DatePicker, Table, TableColumn, Pagination,
-  Option, Card, Autocomplete
+  Option, Card, Autocomplete, Form, FormItem
 } from 'element-ui'
 import lang from 'element-ui/lib/locale/lang/es'
 import locale from 'element-ui/lib/locale'
@@ -38,6 +38,8 @@ Vue.use(Table)
 Vue.use(TableColumn)
 Vue.use(Pagination)
 Vue.use(Card)
+Vue.use(Form)
+Vue.use(FormItem)
 
 Vue.config.productionTip = false
 

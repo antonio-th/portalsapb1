@@ -19,6 +19,7 @@ export default new Router({
     { path: '/pedidos-list', component: PedidosList },
     { path: '/pedido', name: 'Pedido', component: Pedido, props: true },
     { path: '/usuarios-list', component: UsuariosList },
-    { path: '/usuario', name: 'Usuario', component: Usuario, props: true }
+    { path: '/usuario', name: 'Usuario', component: Usuario, props: true },
+    { path: '/existencias', component: load('Existencias') }
   ]
 })

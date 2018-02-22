@@ -22,7 +22,7 @@
           </router-link>
         </div>
         <div class="opcion">
-          <router-link to="/pedidos-list">
+          <router-link to="/existencias">
             <img src="../assets/img/stock.png">
             <div class="texto-opcion">Existencias</div>
           </router-link>
