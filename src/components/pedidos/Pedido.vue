@@ -100,6 +100,11 @@
         <el-row v-for="(partida, index) in pedido.partidas" :key="index">
           <el-col :span="4">
             {{ partida.itemCode}} - {{ partida.bcdcode }}&nbsp;
+            <span id="quilombo" v-if="partida.itemCode">
+              <a href="#" @click="showImage(partida.itemCode, partida.itemName)">
+                <i class="el-icon-picture"></i>
+              </a>
+            </span>
           </el-col>
           <el-col :span="6">
             <el-autocomplete :fetch-suggestions="autocompleteProducto"
@@ -141,6 +146,12 @@
           <el-col :span="2">&nbsp;</el-col>
         </el-row>
       </div> <!-- partidas -->
+
+      <el-dialog :title="codigoImagen + ' ' + descripcionImagen" :visible.sync="dialogVisible" width="550px">
+        <hr />
+        <div id="imagenProducto"><img :src="'/GAPA/vue/showImage/' + codigoImagen"
+                                      width="500px" alt="" border="0"></div>
+      </el-dialog>
 
       <!-- totales -->
       <div id="totales" v-if="pedido.cliente.cardCode">
@@ -216,11 +227,19 @@ const data = () => {
     codigoMXN: '',
     codigoUSD: '',
     loading: false,
-    readonly: true
+    readonly: true,
+    dialogVisible: false,
+    codigoImagen: 'none',
+    descripcionImagen: ''
   }
 }
 
 const metodos = {
+  showImage (codigo, descripcion) {
+    this.codigoImagen = codigo
+    this.descripcionImagen = descripcion
+    this.dialogVisible = true
+  },
   regresar () {
     this.$router.push('/pedidos-list')
   },
@@ -593,7 +612,7 @@ export default {
   mounted: mounted
 }
 </script>
-<style>
+<style scoped>
   #contenido {
     margin: 0 10px 0 10px;
   }
@@ -644,6 +663,15 @@ export default {
   }
   .input-cantidad {
     width: 70px;
+  }
+  #quilombo {
+    font-size: 14pt;
+  }
+  #imagenProducto {
+    margin: 25px 0 0 0;
+  }
+  .el-icon-picture {
+    color: #87ceeb;
   }
 </style>
 <style src="@/assets/css/icons8.css"></style>
